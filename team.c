@@ -24,6 +24,10 @@ int main(){
 
   			continue;
   		}
+	if (strcmp(str[0], "exit") == 0) {
+
+   			return 0;
+  		}
 }
 
 //문자열 포인터배열로 정의
@@ -159,4 +163,39 @@ void Command_exe(char *cmds) {
  	FileRedirect(pipelist[i], i == 0, 1);
  	exit(1);
 
+}
+
+void FileRedirect(char *s, int in, int out) { //4번 및 파일 재지향
+ 	char **chargv;
+ 	char *pin;
+ 	char *pout;
+ 	int i, j;
+
+ 	if (in && ((pin = strchr(s, '<')) != NULL) && out && ((pout = strchr(s, '>')) != NULL) && (pin > pout)) {
+  		if (FindRedirectIn(s) == -1) {
+   			perror("Failed to redirect input");
+   			return;
+  		}
+ 	}
+
+ 	if (out && FindRedircetOut(s) == -1)
+  		perror("Failed to redirect output");
+ 	else if (in && FindRedirectIn(s) == -1)
+  		perror("failed to redirect input");
+ 	else if (ArgvPointer(s, " \t", &chargv) <= 0)
+  		fprintf(stderr, "failed to parse command line\n");
+ 	else {
+
+  		for (i = 0; chargv[i] != 0; i++) {
+   			for (j = 0; chargv[i][j] != 0; j++) {
+    				write(desc[1], &chargv[i][j], sizeof(char));
+   			}
+   			write(desc[1], " ", sizeof(char));
+  		}
+  		execvp(chargv[0], chargv);
+  		perror("failed to execute command");
+
+  		write(desc[1], "/5999", sizeof("/5999"));
+ 	}
+ 	exit(1);
 }
