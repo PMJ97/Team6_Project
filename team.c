@@ -1,3 +1,12 @@
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <setjmp.h>
+
 static sigjmp_buf ToPrompt;
 static volatile sig_atomic_t IndexJump = 0;
 
@@ -7,6 +16,56 @@ static void jumphd(int signalnum) {
  	IndexJump = 0;
  	siglongjmp(ToPrompt, 1);
 }
+
+int main(){
+	if (strcmp(str[0], "cd") == 0) {
+   			chdir(str[1]);
+   			system("pwd");
+
+  			continue;
+  		}
+}
+
+//문자열 포인터배열로 정의
+int ArgvPointer(const char *s, const char *delimiters, char ***argvp) {
+ 	int error;
+ 	int i;
+ 	int numtokens;
+ 	const char *snew;
+ 	char *t;
+
+ 	if ((s == NULL) || (delimiters == NULL) || (argvp == NULL)) {
+  		errno = EINVAL;
+  		return -1;
+ 	}
+ 	*argvp = NULL;
+ 	snew = s + strspn(s, delimiters);
+ 	if ((t = (char *)malloc(strlen(snew) + 1)) == NULL)
+ 		 return -1;
+ 	strcpy(t, snew);
+ 	numtokens = 0;
+ 	if (strtok(t, delimiters) != NULL)
+  		for (numtokens = 1; strtok(NULL, delimiters) != NULL; numtokens++);
+
+ 	if ((*argvp = malloc((numtokens + 1) * sizeof(char *))) == NULL) {
+  		error = errno;
+  		free(t);
+  		errno = error;
+  		return -1;
+ 	}
+
+ 	if (numtokens == 0)
+  		free(t);
+ 	else {
+  		strcpy(t, snew);
+  		**argvp = strtok(t, delimiters);
+  		for (i = 1; i < numtokens; i++)
+   			*((*argvp) + i) = strtok(NULL, delimiters);
+ 	}
+ 	*((*argvp) + numtokens) = NULL;
+ 	return numtokens;
+}
+
 int SetSignal(struct sigaction *def, sigset_t *mask, void(*handler)(int)) { //시그널 설정
  	struct sigaction catch;
 
